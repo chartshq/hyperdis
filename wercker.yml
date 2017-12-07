@@ -23,14 +23,6 @@ build:
   # http://devcenter.wercker.com/docs/steps/index.html
   steps:
 
-    - add-ssh-key:
-        keyname: BITBUCKET
-
-    - add-to-known_hosts:
-        hostname: bitbucket.org
-        fingerprint: 97:8c:1b:f2:6f:14:6b:5c:3b:ec:aa:46:46:74:7c:40
-        type: rsa
-
     - script:
       name: install chrome headless
       code: |
