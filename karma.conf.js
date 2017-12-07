@@ -42,6 +42,9 @@ module.exports = function (config) {
             },
             devtool: 'inline-source-map',
         },
+        webpackMiddleware: {
+            stats: 'errors-only'
+        },
         preprocessors: {
             'test.webpack.js': preprocessors
         },
@@ -90,7 +93,7 @@ module.exports = function (config) {
         },
         port: 9876,
         colors: true,
-        logLevel: config.LOG_INFO,
+        logLevel: config.LOG_WARN,
         autoWatch: false,
         browsers: ['ChromeHeadless'],
         singleRun: true,
