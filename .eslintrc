@@ -20,6 +20,8 @@
     "no-underscore-dangle": 0,
     "no-mixed-operators" : 0,
     "no-cond-assign": 0,
+    "no-shadow": 0,
+    "no-continue": 0,
     "no-return-assign": 0, 
     "brace-style": "off",
     "no-param-reassign": "off",
