@@ -4,14 +4,14 @@ import Model from '../';
 
 describe('ReactiveModel', () => {
     let model;
+        // calcVarModel;
 
     it('should have the instance api methods intact', () => {
         let methods = [
                 'append',
                 'on',
                 'next',
-                'setProp',
-                'getModel',
+                'serialize',
                 'lock',
                 'unlock',
                 'prop'
@@ -44,6 +44,14 @@ describe('ReactiveModel', () => {
 
     before(() => {
         model = Model.create({ range: { start: 1, end: 5 }, visible: true });
+        // calcVarModel = Model.create({
+        //     x: 10,
+        //     y: 11,
+        //     fact: {
+        //         x: 2,
+        //         y: 5
+        //     }
+        // });
     });
 
     describe('##create', () => {
@@ -52,27 +60,27 @@ describe('ReactiveModel', () => {
         });
 
 
-        it('should return the root virtual Object', () => {
-            expect(model._vObj.isRoot()).to.be.true;
+        it('should return the root of graph once the model is created', () => {
+            expect(model.graph().root.isRoot()).to.be.true;
         });
     });
 
     describe('#getModel', () => {
         it('should serialize the model correctly', () => {
-            expect(model.getModel()).to.deep.equal({ range: { start: 1, end: 5 }, visible: true });
+            expect(model.serialize()).to.deep.equal({ range: { start: 1, end: 5 }, visible: true });
         });
     });
 
     describe('#append', () => {
         it('should append properties to the model walking down a path', () => {
-            let anotherModel = model.append('range.type', { absolute: true });
-            expect(anotherModel.getModel()).to.deep
+            model.append('range', { type: { absolute: true } });
+            expect(model.serialize()).to.deep
                             .equal({ range: { start: 1, end: 5, type: { absolute: true } }, visible: true });
         });
 
         it('should append properties to the model at the root', () => {
             let anotherModel = model.append({ focus: null });
-            expect(anotherModel.getModel()).to.deep
+            expect(anotherModel.serialize()).to.deep
                             .equal({
                                 range: {
                                     start: 1,
@@ -87,45 +95,34 @@ describe('ReactiveModel', () => {
         });
     });
 
-    describe('#setProp', () => {
-        it('should set a property value and update immediately', () => {
-            let updatedModel = model.setProp(['range.start', 11], ['range.type.absolute', false]);
-            expect(updatedModel.getModel()).to.deep
-                            .equal({
-                                range: {
-                                    start: 11,
-                                    end: 5,
-                                    type: {
-                                        absolute: false
-                                    }
-                                },
-                                visible: true,
-                                focus: null
-                            });
-        });
-    });
+    // describe('#calcVar', () => {
+    //     it('should add a new variable which is calculated from other variables', () => {
+    //         calcVarModel.calcVar('sum',
+    //             require => require('x', 'y', 'fact', (x, y, fact) => (x * fact.x) + (y * fact.y)));
+    //         expect(calcVarModel.prop('sum')).to.equal(75);
+    //     });
+    // });
 
     describe('#prop', () => {
         it('should work as a getter when only one argument is passed', () => {
             let val = model.prop('range.start');
-            expect(val).to.be.equal(11);
+            expect(val).to.be.equal(1);
         });
 
         it('should get part of model when path till not leaf node is given', () => {
             let val = model.prop('range.type');
-            expect(val).to.deep.equal({ absolute: false });
-        });
-
-
-        it('should return model not present object when the model propery is not found', () => {
-            let val = model.prop('range.type');
-            expect(val).to.deep.equal({ absolute: false });
+            expect(val).to.deep.equal({ absolute: true });
         });
 
         it('can work as setter when two ags are passed', () => {
             let val = model.prop('focus', 10);
             expect(val.prop('focus')).to.equal(10);
         });
+
+        // it('should not update calculated variable', () => {
+        //     calcVarModel.prop('sum', 10);
+        //     expect(calcVarModel.prop('sum')).to.equal(75);
+        // });
     });
 
     describe('#lock, #unlock', () => {
@@ -166,14 +163,38 @@ describe('ReactiveModel', () => {
 
             unsubscribe();
         });
+
+        // it('should not call the callback of a calculatedVariable when the variable is directly set', () => {
+        //     let exeFlag = null,
+        //         uns;
+        //     uns = calcVarModel.on('sum', (oldVal, newVal) => {
+        //         exeFlag = oldVal === newVal;
+        //     });
+
+        //     calcVarModel.prop('sum', 10);
+        //     uns();
+        //     expect(exeFlag).to.equal(null);
+        // });
+
+        // it('should get called once any of the two variables are changed of a calculated variable', () => {
+        //     let val = null,
+        //         uns;
+        //     uns = calcVarModel.on('sum', (oldVal, newVal) => {
+        //         val = [oldVal, newVal];
+        //     });
+
+        //     calcVarModel.prop('x', 20);
+        //     uns();
+        //     expect(val).to.deep.equal([75, 95]);
+        // });
     });
 
     describe('#next', () => {
         it('should subscribe to a change of a property and executor gets called at the next frame call', (done) => {
             let unsubscribe = model.next(['range.end', 'focus'],
                 (sRange, focus) => {
-                    expect(sRange).to.deep.equal([111, 100]);
-                    expect(focus).to.deep.equal([0, 7]);
+                    expect(sRange).to.deep.equal([5, 100]);
+                    expect(focus).to.deep.equal([null, 7]);
                     done();
                 });
 

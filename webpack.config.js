@@ -22,6 +22,6 @@ module.exports = {
     },
     devServer: {
         inline: true,
-        contentBase: './example',
+        contentBase: './examples',
     },
 };

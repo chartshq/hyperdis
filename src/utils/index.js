@@ -1,17 +1,20 @@
-/* eslint-disable */
-let isSimpleObject = (obj) => {
-    let token;
-    if (typeof obj === 'object') {
-        if (obj === null) { return false; }
-        token = Object.prototype.toString.call(obj);
-        if (token === '[object Object]') {
-            return (obj.constructor.toString().match(/^function (.*)\(\)/) || [])[1] === 'Object';
+/* global window */
 
+import ForeignSet from './set';
+
+const
+    isSimpleObject = (obj) => {
+        let token;
+        if (typeof obj === 'object') {
+            if (obj === null) { return false; }
+            token = Object.prototype.toString.call(obj);
+            if (token === '[object Object]') {
+                return (obj.constructor.toString().match(/^function (.*)\(\)/) || [])[1] === 'Object';
+            }
+            true;
         }
-        else true;
-    }
-    return false;
-},
+        return false;
+    },
     minMsThreshold = 16,
     win = typeof window === 'undefined' ? (this || {}) : window,
     reqAnimFrame = win.requestAnimationFrame || win.webkitRequestAnimationFrame ||
@@ -32,38 +35,47 @@ let isSimpleObject = (obj) => {
     },
     pullableRecent = (nodes, fn) => {
         let nFn = () => {
-            fn.apply(null, nodes.map(node => node.snapshot.lastTwo()));
+            fn(...nodes.map((node) => {
+                const
+                    hist = node.history,
+                    l = hist.length - 1;
+                return [hist[l - 1 < 0 ? 0 : l - 1], hist[l]];
+            }));
         };
         nFn.__id = getTimeBasedId();
         return nFn;
     },
     pullableEnd = (nodes, fn) => {
         let nFn = () => {
-            fn.apply(null, nodes.map(node => node.snapshot.ends()));
+            fn(...nodes.map((node) => {
+                const hist = node.history;
+                return [hist[0], hist[hist.length - 1]];
+            }));
         };
         nFn.__id = getTimeBasedId();
         return nFn;
     },
-    unique = (fns) => {
-        return fns
-            .reduce((store, fn) => {
+    unique = fns => fns
+                    .reduce((store, fn) => {
                 // @warn function with side effect, it mutates the store passed during initialization
-                if (fn.__id in store.map) {
-                    return store;
-                }
+                        if (fn.__id in store.map) {
+                            return store;
+                        }
 
-                store.map[fn.__id] = 1;
-                store.unique.push(fn);
+                        store.map[fn.__id] = 1;
+                        store.unique.push(fn);
 
-                return store;
-            }, { map: {}, unique: [] })
-            .unique;
-
+                        return store;
+                    }, { map: {}, unique: [] })
+                    .unique,
+    compose = fns => () => {
+        fns.forEach(fn => fn());
     },
-    compose = (fns) => {
-        return () => {
-            fns.forEach(fn => fn());
-        };
+    identityMap = arrays => arrays,
+    splitPathProp = (path) => {
+        const pathArr = path.split('.'),
+            len = pathArr.length;
+        return [pathArr.slice(0, len - 1), pathArr[len - 1]];
     },
     scheduler = (onFinishCallback) => {
         let queue = [],
@@ -83,6 +95,52 @@ let isSimpleObject = (obj) => {
                 });
             }
         };
+    },
+    resolver = {
+        accumulate: (node) => {
+            const resp = {};
+            node.edges.forEach((_node) => {
+                Object.assign(resp, { [_node.name]: _node.seed });
+            });
+            return resp;
+        },
+        identity: node => node.seed
     };
 
-export { isSimpleObject, scheduler, compose, pullableEnd, pullableRecent, unique };
+function resolveDependencyOrder (node, resolved, resolveMap) {
+    let qname;
+    node.edges.forEach((neighbour) => {
+        resolveDependencyOrder(neighbour, resolved, resolveMap);
+    });
+
+    if (node.isRoot() || (qname = node.qualifiedName) in resolveMap) {
+        return;
+    }
+    resolved.push(node);
+    resolveMap[qname] = 1;
+}
+
+function getUpstreamNodes (node, list) {
+    if (node.isRoot()) {
+        return;
+    }
+    node.outgoingEdges.forEach((_node) => {
+        list.push(_node);
+        getUpstreamNodes(_node, list);
+    });
+}
+
+export {
+    isSimpleObject,
+    scheduler,
+    compose,
+    identityMap,
+    pullableEnd,
+    pullableRecent,
+    unique,
+    splitPathProp,
+    resolver,
+    ForeignSet,
+    resolveDependencyOrder,
+    getUpstreamNodes
+};
