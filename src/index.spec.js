@@ -98,7 +98,7 @@ describe('ReactiveModel', () => {
     // describe('#calcVar', () => {
     //     it('should add a new variable which is calculated from other variables', () => {
     //         calcVarModel.calcVar('sum',
-    //             require => require('x', 'y', 'fact', (x, y, fact) => (x * fact.x) + (y * fact.y)));
+    //             fetch => fetch('x', 'y', 'fact', (x, y, fact) => (x * fact.x) + (y * fact.y)));
     //         expect(calcVarModel.prop('sum')).to.equal(75);
     //     });
     // });

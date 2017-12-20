@@ -71,6 +71,11 @@ const
     compose = fns => () => {
         fns.forEach(fn => fn());
     },
+    flat = (...params) => {
+        const res = [];
+        params.forEach(param => res.push(...param));
+        return res;
+    },
     identityMap = arrays => arrays,
     splitPathProp = (path) => {
         const pathArr = path.split('.'),
@@ -96,15 +101,27 @@ const
             }
         };
     },
+    fetch = namedNode => (...params) => params.map((param) => {
+        const node = namedNode[param];
+        return {
+            name: node.name,
+            qualifiedName: node.qualifiedName,
+            value: node.seed
+        };
+    }),
+    fetchAggregator = (...params) => ({
+        dependencies: params.slice(0, params.length - 1),
+        fn: params[params.length - 1]
+    }),
     resolver = {
-        accumulate: (node) => {
+        accumulate: (...params) => {
             const resp = {};
-            node.edges.forEach((_node) => {
-                Object.assign(resp, { [_node.name]: _node.seed });
+            params.forEach((nodeDetails) => {
+                Object.assign(resp, { [nodeDetails.name]: nodeDetails.value });
             });
             return resp;
         },
-        identity: node => node.seed
+        identity: nodeDetails => nodeDetails.value
     };
 
 function resolveDependencyOrder (node, resolved, resolveMap) {
@@ -130,10 +147,31 @@ function getUpstreamNodes (node, list) {
     });
 }
 
+class CustomResolver {
+    constructor (resolver) {
+        this.fn = resolver;
+        this.dep = [];
+    }
+
+    addDependencies(...dep) {
+        this.dep.push(...dep);
+        return this;
+    }
+
+    getDependencies () {
+        return this.dep;
+    }
+
+    get () {
+        return this.fn;
+    }
+}
+
 export {
     isSimpleObject,
     scheduler,
     compose,
+    flat,
     identityMap,
     pullableEnd,
     pullableRecent,
@@ -142,5 +180,8 @@ export {
     resolver,
     ForeignSet,
     resolveDependencyOrder,
+    fetch,
+    fetchAggregator,
+    CustomResolver,
     getUpstreamNodes
 };

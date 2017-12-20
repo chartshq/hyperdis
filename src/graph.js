@@ -1,10 +1,12 @@
 import {
     isSimpleObject,
     resolver,
+    flat,
     resolveDependencyOrder,
     getUpstreamNodes,
-    identityMap,
     ForeignSet,
+    fetch,
+    CustomResolver,
     scheduler
 } from './utils';
 import Node from './graph-node';
@@ -13,11 +15,17 @@ import ElectricNode from './electric-node';
 export default class Graph {
     constructor () {
         this.qualifiedNodeMap = {};
-        this.root = new Node(null);
+        this.retriever = fetch(this.qualifiedNodeMap);
+        this.root = new Node(null, null, { retriever: this.retriever });
         this.root.resolver = resolver.accumulate;
 
         this._wholeSet = null;
         this._propagate = true;
+        this.propagationOverride = {
+            currentFrameListeners: false,
+            nextFrameListeners: false
+        };
+
         this._schedule = scheduler(() => {
             let qname;
             for (qname in this.qualifiedNodeMap) {
@@ -32,7 +40,8 @@ export default class Graph {
     createNodesFrom (obj, mount) {
         let val;
         const qualifiedNodeMap = this.qualifiedNodeMap,
-            root = this.root;
+            root = this.root,
+            retriever = this.retriever;
 
         (function rec (objn, qualifiedName, history) {
             let key,
@@ -45,7 +54,7 @@ export default class Graph {
                     continue;
                 }
                 qname = `${qualifiedName}${key}`;
-                node = new Node(key, qname);
+                node = new Node(key, qname, { retriever });
                 qualifiedNodeMap[qname] = node;
 
                 if ((perv = history.perv) !== undefined) {
@@ -58,6 +67,9 @@ export default class Graph {
                 if (isSimpleObject(val = objn[key])) {
                     rec(val, `${qualifiedName}${key}.`, { perv: node });
                     node.resolver = resolver.accumulate;
+                } else if (val instanceof CustomResolver) {
+                    node.resolver = val.get();
+                    node.addDependencies(...val.getDependencies().map(qname => qualifiedNodeMap[qname]));
                 } else {
                     node.resolver = resolver.identity;
                     node.seed = val;
@@ -100,7 +112,7 @@ export default class Graph {
                 return entry[0];
             });
         nodes.forEach(node => node.resolve());
-        electricEdges.push(...identityMap(...nodes.map(node => node.electricEdges)));
+        electricEdges.push(...flat(...nodes.map(node => node.electricEdges)));
         changedSet = new ForeignSet(nodes.map(node => node.qualifiedName));
 
         if (!this._propagate) {
@@ -112,7 +124,7 @@ export default class Graph {
         nodes.forEach(node => getUpstreamNodes(node, upstreamNodes));
         upstreamNodes.forEach(upstreamNode => upstreamNode.resolve());
         changedSet.append(upstreamNodes.map(node => node.qualifiedName));
-        electricEdges.push(...identityMap(...upstreamNodes.map(node => node.electricEdges)));
+        electricEdges.push(...flat(...upstreamNodes.map(node => node.electricEdges)));
 
         this.__execUniqueElectricEdges(electricEdges, changedSet);
         return this;
@@ -120,12 +132,15 @@ export default class Graph {
 
     __execUniqueElectricEdges (electricEdges, changedSet) {
         const
-            differenceSet = ForeignSet.difference(this._wholeSet, changedSet),
-            entries = differenceSet.toArray(),
             cfLstnrs = [], // current frame listeners
             nfLstnrs = []; // next frame listeners
+        if (changedSet) {
+            const
+                differenceSet = ForeignSet.difference(this._wholeSet, changedSet),
+                entries = differenceSet.toArray();
 
-        entries.forEach(entry => this.qualifiedNodeMap[entry].repeatHead());
+            entries.forEach(entry => this.qualifiedNodeMap[entry].repeatHead());
+        }
 
         electricEdges.forEach((e) => {
             cfLstnrs.push(...e.listeners.currentFrame);
@@ -134,8 +149,9 @@ export default class Graph {
             nfLstnrs.push(...e.listeners.nextFrame);
         });
 
-        cfLstnrs.forEach(fn => fn());
-        this._schedule(nfLstnrs);
+        !this.propagationOverride.currentFrameListeners && cfLstnrs.forEach(fn => fn());
+        !this.propagationOverride.nextFrameListeners && this._schedule(nfLstnrs);
+        this.resetPropagationOverride();
         return this;
     }
 
@@ -154,6 +170,17 @@ export default class Graph {
 
     stopPropagation () {
         this._propagate = false;
+        return this;
+    }
+
+    resetPropagationOverride () {
+        this.propagationOverride.currentFrameListeners = false;
+        this.propagationOverride.nextFrameListeners = false;
+        return this;
+    }
+
+    setPropagationOverride (key) {
+        this.propagationOverride[`${key}Listeners`] = true;
         return this;
     }
 

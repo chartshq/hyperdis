@@ -1,9 +1,13 @@
 import Graph from './graph';
+import { CustomResolver, fetchAggregator } from './utils';
 
 /**
  * The container class for Hyperdis. Hyperdis is an enabler for observable object with few interesting features like,
- * calculated property, next frame and same frame listeners, multiple listeners etc. It internally uses a graph to hold
- * the hierarchial relationship of a object. Model is merely a container which ties all the components together.
+ * calculated property, next frame and same frame listeners, multiple listeners etc with a dependency resolving system.
+ * It internally uses a graph to hold the hierarchial relationship of a object. Model is merely a container which
+ * ties all the components together.
+ *
+ * @todo Circular dependency detection is not present
  *
  * @example check src/index.spec.js
  * @class
@@ -53,6 +57,37 @@ class Model {
         }
 
         this._addPropInModel(mountPoint, obj);
+        return this;
+    }
+
+    /**
+     * Creates a calculated variable from existing variable. This variable can't be updated from outside.
+     * @param {string} mountpoint property path on which the new variable will be placed
+     * @param {string} name name of the variable. If the variable could have hierarchy like `limits.start`
+     * @param {Function} fn funtion where the dependent variables are injected based on the dependency requirement
+     */
+    calculatedProp (...params) {
+        let calculationConfig,
+            customResolver,
+            varName,
+            mount,
+            fetchFn;
+
+        if (params.length > 2) {
+            mount = params[0];
+            varName = params[1];
+            fetchFn = params[2];
+        } else {
+            mount = null;
+            varName = params[0];
+            fetchFn = params[1];
+        }
+
+        calculationConfig = fetchFn(fetchAggregator);
+        customResolver = new CustomResolver(calculationConfig.fn);
+        customResolver.addDependencies(...calculationConfig.dependencies);
+
+        this._addPropInModel(mount, { [varName]: customResolver });
         return this;
     }
 
@@ -159,7 +194,8 @@ class Model {
             });
 
         if (instantCall) {
-            this._graph.stopPropagation().resetNodeValue(props);
+            // Bar current next frame listeners from getting fired
+            this._graph.stopPropagation().setPropagationOverride('nextFrame').resetNodeValue(props);
         }
         return unsub;
     }
@@ -188,7 +224,8 @@ class Model {
 
         // @todo check support for this from the graph side
         if (instantCall) {
-            this._graph.stopPropagation().resetNodeValue(props);
+            // Bar current frame listeners from getting fired
+            this._graph.stopPropagation().setPropagationOverride('currentFrame').resetNodeValue(props);
         }
 
         return unsub;

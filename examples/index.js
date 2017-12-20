@@ -20,6 +20,8 @@ console.log(model.serialize());
 model.prop('fact.y', -3);
 console.log(model.serialize());
 
+model.calculatedProp('metrix', fetch => fetch('x', 'y', (x, y) => x.value + y.value));
+
 
 model1
                 .lock()
@@ -57,7 +59,8 @@ function update () {
 // Render graph here
 function createData (mod) {
     const graph = mod.graph(),
-        network = graph.root;
+        network = graph.root,
+        hash = {};
     let data = {
         nodes: [],
         edges: [],
@@ -65,10 +68,16 @@ function createData (mod) {
     };
 
     (function rec (node, incoming) {
-        const i = data.nodes.push({ label: node.name === null ? '$' : node.name, r: 20 }) - 1;
+        let i;
+        if (node.qualifiedName in hash) {
+            i = hash[node.qualifiedName];
+        } else {
+            i = data.nodes.push({ label: node.name === null ? '$' : node.name, r: 20 }) - 1;
+        }
         if (incoming !== undefined) {
             data.edges.push({ source: incoming, target: i });
         }
+        hash[node.qualifiedName] = i;
         node.edges.forEach((element) => {
             rec(element, i);
         });

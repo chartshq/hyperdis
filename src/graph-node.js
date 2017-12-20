@@ -1,10 +1,12 @@
 export default class GraphNode {
-    constructor (name, qualifiedName) {
+    constructor (name, qualifiedName, options) {
+        options = options || {};
         this.name = name;
         this.qualifiedName = qualifiedName;
         this.edges = [];
         this.outgoingEdges = [];
         this.seed = null;
+        this.retriever = options.retriever;
         this.history = [];
         this.resolver = null;
         this.electricEdges = [];
@@ -22,9 +24,20 @@ export default class GraphNode {
     }
 
     resolve () {
-        this.seed = this.resolver(this);
+        this.seed = this.resolver(...this.retrieveDetails());
         this.history.push(this.seed);
         return this;
+    }
+
+    retrieveDetails () {
+        if (this.edges.length === 0) {
+            return [{
+                name: this.name,
+                qualifiedName: this.qualifiedName,
+                value: this.seed
+            }];
+        }
+        return this.retriever(...this.edges.map(edge => edge.qualifiedName));
     }
 
     repeatHead () {
