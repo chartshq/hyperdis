@@ -195,7 +195,7 @@ class Model {
 
         if (instantCall) {
             // Bar current next frame listeners from getting fired
-            this._graph.stopPropagation().setPropagationOverride('nextFrame').resetNodeValue(props);
+            this._graph.stopPropagation().setPropagationOverride('nextFrame').resetNodeValue(...props);
         }
         return unsub;
     }
@@ -225,7 +225,7 @@ class Model {
         // @todo check support for this from the graph side
         if (instantCall) {
             // Bar current frame listeners from getting fired
-            this._graph.stopPropagation().setPropagationOverride('currentFrame').resetNodeValue(props);
+            this._graph.stopPropagation().setPropagationOverride('currentFrame').resetNodeValue(...props);
         }
 
         return unsub;
