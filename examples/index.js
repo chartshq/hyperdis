@@ -16,11 +16,19 @@ const Model = hyperdis.default,
     model1 = Model.create({ range: { start: 1, end: 5 }, visible: true, focus: 1 });
 
 model1.append('range', { type: { absolute: true } });
+console.log('R', model1.serialize());
 console.log(model.serialize());
 model.prop('fact.y', -3);
 console.log(model.serialize());
 
-model.calculatedProp('metrix', fetch => fetch('x', 'y', (x, y) => x.value + y.value));
+model.calculatedProp('metrix', fetch => fetch('x', 'y', (x, y) => {
+    console.log(1);
+    return x.value + y.value;
+}));
+model.calculatedProp('sqx', fetch => fetch('x', (x) => {
+    console.log(2);
+    return x.value * x.value;
+}));
 
 
 model1

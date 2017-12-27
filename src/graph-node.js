@@ -5,7 +5,8 @@ export default class GraphNode {
         this.qualifiedName = qualifiedName;
         this.edges = [];
         this.outgoingEdges = [];
-        this.seed = null;
+        this._seed = null;
+        this.requireResolve = true;
         this.retriever = options.retriever;
         this.history = [];
         this.resolver = null;
@@ -23,9 +24,20 @@ export default class GraphNode {
         return this;
     }
 
+    get seed () {
+        return this._seed;
+    }
+
+    set seed (value) {
+        this._seed = value;
+        this.requireResolve = true;
+        return this;
+    }
+
     resolve () {
         this.seed = this.resolver(...this.retrieveDetails());
         this.history.push(this.seed);
+        this.requireResolve = false;
         return this;
     }
 

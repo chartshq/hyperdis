@@ -1,6 +1,7 @@
 import {
     isSimpleObject,
     resolver,
+    upstreamNodes,
     flat,
     resolveDependencyOrder,
     getUpstreamNodes,
@@ -38,7 +39,8 @@ export default class Graph {
     }
 
     createNodesFrom (obj, mount) {
-        let val;
+        let val,
+            resolveReqList;
         const qualifiedNodeMap = this.qualifiedNodeMap,
             root = this.root,
             retriever = this.retriever;
@@ -73,7 +75,7 @@ export default class Graph {
                 } else {
                     node.resolver = resolver.identity;
                     node.seed = val;
-                    node.resolve();
+                    // node.resolve();
                 }
             }
         }(obj, mount === null ? '' : `${mount}.`, {
@@ -83,7 +85,10 @@ export default class Graph {
         this._wholeSet = new ForeignSet(Object.keys(this.qualifiedNodeMap));
 
         // Recalculate the model without firing the listeners
-        this.constructor.getResolvedList(root).concat(root).forEach(e => e.resolve());
+        // @todo selective branch resolve. Currently resolve gets called even for a branch which was updated
+        resolveReqList = this.constructor.getResolvedList(root).concat(root).filter(node => node.requireResolve);
+        resolveReqList.forEach(node => node.resolve());
+        upstreamNodes(resolveReqList).forEach(node => node.resolve());
         return this;
     }
 

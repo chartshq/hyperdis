@@ -113,6 +113,23 @@ const
         dependencies: params.slice(0, params.length - 1),
         fn: params[params.length - 1]
     }),
+    upstreamNodes = (list) => {
+        const map = {},
+            res = [];
+        list.forEach(node => map[node.qualifiedName] = 1);
+        function rec (arr) {
+            arr.forEach((node) => {
+                let qname;
+                if (!((qname = node.qualifiedName) in map)) {
+                    map[qname] = 1;
+                    res.push(node);
+                }
+                rec(node.outgoingEdges);
+            });
+        }
+        rec(list);
+        return res;
+    },
     resolver = {
         accumulate: (...params) => {
             const resp = {};
@@ -181,6 +198,7 @@ export {
     ForeignSet,
     resolveDependencyOrder,
     fetch,
+    upstreamNodes,
     fetchAggregator,
     CustomResolver,
     getUpstreamNodes
