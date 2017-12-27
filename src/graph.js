@@ -94,7 +94,7 @@ export default class Graph {
 
     getNodeValue (prop) {
         if (prop in this.qualifiedNodeMap) {
-            return this.qualifiedNodeMap[prop].resolve().seed;
+            return this.qualifiedNodeMap[prop].seed;
         }
         return undefined;
     }
