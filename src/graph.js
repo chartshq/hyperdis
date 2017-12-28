@@ -1,7 +1,7 @@
 import {
     isSimpleObject,
     resolver,
-    upstreamNodes,
+    // upstreamNodes,
     flat,
     resolveDependencyOrder,
     getUpstreamNodes,
@@ -88,7 +88,7 @@ export default class Graph {
         // @todo selective branch resolve. Currently resolve gets called even for a branch which was updated
         resolveReqList = this.constructor.getResolvedList(root).concat(root).filter(node => node.requireResolve);
         resolveReqList.forEach(node => node.resolve());
-        upstreamNodes(resolveReqList).forEach(node => node.resolve());
+        getUpstreamNodes(resolveReqList).forEach(node => node.resolve());
         return this;
     }
 
@@ -108,10 +108,10 @@ export default class Graph {
     }
 
     update (...params) {
-        let changedSet;
+        let changedSet,
+            upstreamNodes;
         const
             electricEdges = [],
-            upstreamNodes = [],
             nodes = params.map((entry) => {
                 entry[0].seed = entry[1];
                 return entry[0];
@@ -126,7 +126,7 @@ export default class Graph {
             return this;
         }
 
-        nodes.forEach(node => getUpstreamNodes(node, upstreamNodes));
+        upstreamNodes = getUpstreamNodes(nodes);
         upstreamNodes.forEach(upstreamNode => upstreamNode.resolve());
         changedSet.append(upstreamNodes.map(node => node.qualifiedName));
         electricEdges.push(...flat(...upstreamNodes.map(node => node.electricEdges)));

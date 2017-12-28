@@ -113,16 +113,30 @@ const
         dependencies: params.slice(0, params.length - 1),
         fn: params[params.length - 1]
     }),
-    upstreamNodes = (list) => {
-        const map = {},
-            res = [];
-        list.forEach(node => map[node.qualifiedName] = 1);
+    getUpstreamNodes = (list) => {
+        let res = [];
+        const map = {};
+        list.forEach(node => map[node.qualifiedName] = -1);
         function rec (arr) {
             arr.forEach((node) => {
-                let qname;
+                let qname,
+                    placedIndex,
+                    preArr,
+                    postArr;
                 if (!((qname = node.qualifiedName) in map)) {
-                    map[qname] = 1;
-                    res.push(node);
+                    map[qname] = res.push(node) - 1;
+                } else {
+                    placedIndex = map[qname];
+                    if (placedIndex !== -1 && placedIndex !== res.length - 1) {
+                        // If not the last element, readjust the array so that the later dependency position is saved
+                        preArr = res.slice(0, placedIndex);
+                        postArr = res.slice(placedIndex + 1);
+                        res = preArr.concat(postArr);
+
+                        // reset the index in map
+                        postArr.forEach((elem, i) => map[elem.qualifiedName] = i + preArr.length);
+                        map[qname] = res.push(node) - 1;
+                    }
                 }
                 rec(node.outgoingEdges);
             });
@@ -154,15 +168,15 @@ function resolveDependencyOrder (node, resolved, resolveMap) {
     resolveMap[qname] = 1;
 }
 
-function getUpstreamNodes (node, list) {
-    if (node.isRoot()) {
-        return;
-    }
-    node.outgoingEdges.forEach((_node) => {
-        list.push(_node);
-        getUpstreamNodes(_node, list);
-    });
-}
+// function getUpstreamNodes (node, list) {
+//     if (node.isRoot()) {
+//         return;
+//     }
+//     node.outgoingEdges.forEach((_node) => {
+//         list.push(_node);
+//         getUpstreamNodes(_node, list);
+//     });
+// }
 
 class CustomResolver {
     constructor (resolver) {
@@ -198,7 +212,7 @@ export {
     ForeignSet,
     resolveDependencyOrder,
     fetch,
-    upstreamNodes,
+    // upstreamNodes,
     fetchAggregator,
     CustomResolver,
     getUpstreamNodes
