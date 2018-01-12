@@ -131,7 +131,7 @@ export default class Graph {
         changedSet.append(upstreamNodes.map(node => node.qualifiedName));
         electricEdges.push(...flat(...upstreamNodes.map(node => node.electricEdges)));
 
-        this.__execUniqueElectricEdges(electricEdges, changedSet);
+        this.__execUniqueElectricEdges(Array.from(new Set(electricEdges)), changedSet);
         return this;
     }
 
