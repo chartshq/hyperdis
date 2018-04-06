@@ -16,8 +16,8 @@ const
         return false;
     },
     minMsThreshold = 16,
-    win = typeof window === 'undefined' ? (this || {}) : window,
-    reqAnimFrame = win.requestAnimationFrame || win.webkitRequestAnimationFrame ||
+    /* istanbul ignore next */win = typeof window === 'undefined' ? (this || {}) : window,
+    /* istanbul ignore next */ reqAnimFrame = win.requestAnimationFrame || win.webkitRequestAnimationFrame ||
         win.mozRequestAnimationFrame || win.oRequestAnimationFrame ||
         win.msRequestAnimationFrame ||
         function (callback) {

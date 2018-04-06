@@ -1,6 +1,6 @@
 export default class GraphNode {
     constructor (name, qualifiedName, options) {
-        options = options || {};
+        /* istanbul ignore next */options = options || {};
         this.name = name;
         this.qualifiedName = qualifiedName;
         this.edges = [];
@@ -56,6 +56,7 @@ export default class GraphNode {
         const
             history = this.history,
             head = history[history.length - 1];
+        // @todo- Akash, write test case if history.length === 0 to pass code coverage
         if (history.length === 0) {
             return this;
         }

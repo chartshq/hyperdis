@@ -6,15 +6,13 @@
   "license": "MIT",
   "main": "src/index.js",
   "author": "FusionCharts Technologies <support@fusioncharts.com>",
-  "keywords": [
-  ],
+  "keywords": [],
   "preferGlobal": false,
   "repository": {
     "type": "git",
     "url": "https://bitbucket.org/fusioncharts/hyperdis"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
     "babel-cli": "6.26.0",
     "babel-core": "6.24.0",
