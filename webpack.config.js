@@ -1,27 +1,28 @@
-const libraryName = 'hyperdis',
-    OUT_FILE = `${libraryName}.js`;
+const libraryName = 'hyperdis';
+const outFileName = `${libraryName}.js`;
 
 module.exports = {
     entry: './src/index.js',
     output: {
         path: `${__dirname}/dist`,
-        filename: OUT_FILE,
+        filename: outFileName,
         library: libraryName,
         libraryTarget: 'umd',
         umdNamedDefine: true,
     },
     devtool: 'source-map',
     module: {
-        loaders: [{
-            test: /\.js$/,
-            loader: 'babel-loader',
-            query: {
-                presets: ['es2015'],
-            },
-        }],
+        rules: [
+            {
+                test: /\.js$/,
+                use: {
+                    loader: 'babel-loader'
+                }
+            }
+        ]
     },
     devServer: {
         inline: true,
-        contentBase: './examples',
-    },
+        contentBase: './example',
+    }
 };
