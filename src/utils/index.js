@@ -11,7 +11,6 @@ const
             if (token === '[object Object]') {
                 return (obj.constructor.toString().match(/^function (.*)\(\)/) || [])[1] === 'Object';
             }
-            return true;
         }
         return false;
     },
