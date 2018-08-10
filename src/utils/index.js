@@ -9,7 +9,7 @@ const
             if (obj === null) { return false; }
             token = Object.prototype.toString.call(obj);
             if (token === '[object Object]') {
-                return (obj.constructor.toString().match(/^function (.*)\(\)/) || [])[1] === 'Object';
+                return (obj.constructor.toString().match(/^function (.*)\(\)/m) || [])[1] === 'Object';
             }
         }
         return false;
