@@ -130,7 +130,7 @@ myState.prop('range.type');
 If the same function is called using two parameters, first one being the property and second one being the value, then the value is set for the property and the handlers are called (if any) which got registered using the `on` function.
 
 ```javascript
-myState.prop('visible`, true);
+myState.prop('visible', true);
 ```
 
 This returns the instance on which it was called for chaining.
