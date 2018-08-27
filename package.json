@@ -1,16 +1,22 @@
 {
   "name": "hyperdis",
-  "description": "JavaScript Data Visualisation Library",
-  "homepage": "http://www.fusioncharts.com/",
+  "description": "A high performance reactive state store for web apps",
+  "homepage": "https://github.com/chartshq/hyperdis",
   "version": "1.0.0",
   "license": "MIT",
-  "main": "src/index.js",
-  "author": "FusionCharts Technologies <support@fusioncharts.com>",
-  "keywords": [],
-  "preferGlobal": false,
+  "main": "dist/hyperdis.js",
+  "author": "Charts.com <support@charts.com>",
+  "keywords": [
+    "hyperdis",
+    "reactive",
+    "programming",
+    "state",
+    "global",
+    "store"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://bitbucket.org/fusioncharts/hyperdis"
+    "url": "https://github.com/chartshq/hyperdis"
   },
   "dependencies": {},
   "devDependencies": {
