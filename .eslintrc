@@ -10,6 +10,7 @@
     "indent": ["error", 4, { "MemberExpression": 4 }],
     "space-before-function-paren": "off",
     "no-multi-assign": "off",
+    "one-var": "off",
     "max-len": ["error", 120],
     "no-plusplus": "off",
     "no-unused-expressions": "off",
