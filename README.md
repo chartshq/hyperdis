@@ -49,7 +49,7 @@ let state = State.create({
 
 ### Instance Methods
 
-#### `serialize`
+#### `serialize()`
 
 Since `State.create` does not return the JavaScript object back as it deserialize the JavaScript object to native data-structure, `serialize` function comes to the rescue to get the JavaScript object back.
 
@@ -65,7 +65,7 @@ Since `State.create` does not return the JavaScript object back as it deserializ
     //  }
 ```
 
-#### `append`
+#### `append()`
 
 Appends property in the existing state (mutates the original state). The is called using two parameters. The first parameter is where to append the state and the second being what property to append.
 
@@ -115,7 +115,7 @@ myState.serialize();
 
 This function returns the same state on which the method was called.
 
-#### `prop`
+#### `prop()`
 
 This acts as getter and setter. If the function is called by passing only one argument, it retrieve the value associated with the property.
 
@@ -135,7 +135,7 @@ myState.prop('visible', true);
 
 This returns the instance on which it was called for chaining.
 
-#### `on`
+#### `on()`
 
 This function takes a single or group of property and handler which is called when any of the properties are changed.
 When a single property is changed the handler is called with two parameter, what was the old value of the state property and what is the new value.
@@ -210,11 +210,11 @@ unsub();
 
 `On` takes an optional boolean value as the last parameter, which if passed as a true value the handler gets called during registration itself.
 
-#### `next`
+#### `next()`
 
 Just like the way on works, it just calls the handlers at the start of next event loop.
 
-#### `lock` and `unlock`
+#### `lock()` and `unlock()`
 
 This helps control the call of handler when a property is changed.
 
