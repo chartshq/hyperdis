@@ -1,10 +1,9 @@
 /* global describe, it, before */
 import { expect } from 'chai';
-import Model from '../';
+import Model from './';
 
 describe('ReactiveModel', () => {
     let model;
-        // calcVarModel;
 
     it('should have the instance api methods intact', () => {
         let methods = [
@@ -44,21 +43,12 @@ describe('ReactiveModel', () => {
 
     before(() => {
         model = Model.create({ range: { start: 1, end: 5 }, visible: true });
-        // calcVarModel = Model.create({
-        //     x: 10,
-        //     y: 11,
-        //     fact: {
-        //         x: 2,
-        //         y: 5
-        //     }
-        // });
     });
 
     describe('##create', () => {
         it('should create the model with given object', () => {
             expect(model).to.be.an.instanceof(Model);
         });
-
 
         it('should return the root of graph once the model is created', () => {
             expect(model.graph().root.isRoot()).to.be.true;
@@ -95,23 +85,17 @@ describe('ReactiveModel', () => {
         });
     });
 
-    // describe('#calcVar', () => {
-    //     it('should add a new variable which is calculated from other variables', () => {
-    //         calcVarModel.calcVar('sum',
-    //             fetch => fetch('x', 'y', 'fact', (x, y, fact) => (x * fact.x) + (y * fact.y)));
-    //         expect(calcVarModel.prop('sum')).to.equal(75);
-    //     });
-    // });
-
     describe('#prop', () => {
         it('should work as a getter when only one argument is passed', () => {
             let val = model.prop('range.start');
             expect(val).to.be.equal(1);
         });
+
         it('should return undefined if the prop is not present', () => {
             let val = model.prop('range.isPresent');
             expect(val).to.not.be.defined;
         });
+
         it('should current instance if no argument is provided', () => {
             let val = model.prop();
             expect(val).to.deep.equal(model);
@@ -126,11 +110,6 @@ describe('ReactiveModel', () => {
             let val = model.prop('focus', 10);
             expect(val.prop('focus')).to.equal(10);
         });
-
-        // it('should not update calculated variable', () => {
-        //     calcVarModel.prop('sum', 10);
-        //     expect(calcVarModel.prop('sum')).to.equal(75);
-        // });
     });
 
     describe('#lock, #unlock', () => {
@@ -171,38 +150,15 @@ describe('ReactiveModel', () => {
 
             unsubscribe();
         });
+
         it('should subscribe to a change or registration of a property and executor gets called when property change',
-         () => {
-             let unsubscribe = model.on(['range.start'],
-                (rangeStart) => {
-                    expect(rangeStart[0]).to.deep.equal(rangeStart[1]);
-                }, true);
-             unsubscribe();
-         });
-
-        // it('should not call the callback of a calculatedVariable when the variable is directly set', () => {
-        //     let exeFlag = null,
-        //         uns;
-        //     uns = calcVarModel.on('sum', (oldVal, newVal) => {
-        //         exeFlag = oldVal === newVal;
-        //     });
-
-        //     calcVarModel.prop('sum', 10);
-        //     uns();
-        //     expect(exeFlag).to.equal(null);
-        // });
-
-        // it('should get called once any of the two variables are changed of a calculated variable', () => {
-        //     let val = null,
-        //         uns;
-        //     uns = calcVarModel.on('sum', (oldVal, newVal) => {
-        //         val = [oldVal, newVal];
-        //     });
-
-        //     calcVarModel.prop('x', 20);
-        //     uns();
-        //     expect(val).to.deep.equal([75, 95]);
-        // });
+            () => {
+                let unsubscribe = model.on(['range.start'],
+                    (rangeStart) => {
+                        expect(rangeStart[0]).to.deep.equal(rangeStart[1]);
+                    }, true);
+                unsubscribe();
+            });
     });
 
     describe('#next', () => {
@@ -220,6 +176,22 @@ describe('ReactiveModel', () => {
                             .prop('focus', 7);
 
             unsubscribe();
+        });
+
+        it('should consecutively fire next listeners', (done) => {
+            const unsub2 = model.next(['range.end'], (end) => {
+                expect(end).to.deep.equal([5, 200]);
+                done();
+            });
+
+            const unsub1 = model.next(['range.start'], () => {
+                model.prop('range.end', 200);
+
+                unsub1();
+                unsub2();
+            });
+
+            model.prop('range.start', 50);
         });
     });
 
@@ -240,6 +212,7 @@ describe('ReactiveModel', () => {
                             .unlock();
             expect(model.prop('newCalculatedProperty')).to.deep.equal(100);
         });
+
         it('should be able to generate a calculated property on a property path', () => {
             model.calculatedProp('range', 'newRangePropery',
             fetch => fetch('range.start', 'range.end',
