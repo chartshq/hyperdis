@@ -1,56 +1,62 @@
-const isDebug = arg => arg === '--debug';
-let coverageRules = [
-    {
-        test: /\.js$|\.jsx$/,
-        use: {
-            loader: 'istanbul-instrumenter-loader',
-            options: { esModules: true },
-        },
-        enforce: 'pre',
-        exclude: /node_modules|src\/renderer\/|\.spec\.js$/,
-    }
-    ],
-    preprocessors = ['webpack'];
-
-if (process.argv.some(isDebug)) {
-    coverageRules = [];
-    preprocessors.push('sourcemap');
-}
-
 module.exports = function (config) {
     config.set({
         basePath: './',
         frameworks: ['mocha', 'chai'],
         files: [
-            'test.webpack.js',
+            'test.webpack.js'
         ],
         webpack: {
+            devtool: 'inline-source-map',
             module: {
                 rules: [
+                    // instrument only testing sources with Istanbul
                     {
                         test: /\.js$/,
                         use: {
                             loader: 'babel-loader',
                             query: {
-                                presets: ['es2015'],
-                            },
+                                presets: ['env']
+                            }
                         },
-                        exclude: /node_modules/,
+                        exclude: /node_modules/
                     },
-                    ...coverageRules
-                ],
-            },
-            devtool: 'inline-source-map',
+                    {
+                        test: /\.(s*)css$/,
+                        use: [
+                            {
+                                loader: 'style-loader',
+                                options: { singleton: true }
+                            },
+                            { loader: 'css-loader' },
+                            { loader: 'sass-loader' }
+                        ],
+                        exclude: /node_modules/
+                    },
+                    {
+                        test: /\.js$|\.jsx$/,
+                        use: {
+                            loader: 'istanbul-instrumenter-loader',
+                            options: { esModules: true }
+                        },
+                        enforce: 'pre',
+                        exclude: /node_modules|src\/renderer\/|\.spec\.js$/
+                    }
+                ]
+            }
         },
         webpackMiddleware: {
-            stats: 'errors-only'
+            noInfo: true,
+            stats: {
+                chunks: false
+            }
         },
         preprocessors: {
-            'test.webpack.js': preprocessors
+            'test.webpack.js': ['webpack', 'sourcemap']
         },
         exclude: [
-            '**/*.swp',
+            '**/*.swp'
         ],
+
         coverageIstanbulReporter: {
             dir: 'coverage/',
             thresholds: {
@@ -59,7 +65,7 @@ module.exports = function (config) {
                     statements: 80,
                     lines: 80,
                     branches: 80,
-                    functions: 80,
+                    functions: 80
                 },
                 each: { // thresholds per file
                     statements: 80,
@@ -68,20 +74,19 @@ module.exports = function (config) {
                     functions: 80,
                     overrides: {
                         'baz/component/**/*.js': {
-                            statements: 80,
-                        },
-                    },
-                },
+                            statements: 80
+                        }
+                    }
+                }
             },
             reports: ['html', 'lcov', 'text-summary'],
             fixWebpackSourcePaths: true,
             reporters: [
                 { type: 'text' },
                 { type: 'html', subdir: 'report-html', file: 'report.html' },
-                { type: 'lcov', subdir: 'report-lcov', file: 'report.txt' },
-            ],
+                { type: 'lcov', subdir: 'report-lcov', file: 'report.txt' }
+            ]
         },
-
         reporters: ['spec', 'coverage-istanbul'],
         specReporter: {
             maxLogLines: 5, // limit number of lines logged per test
@@ -89,14 +94,20 @@ module.exports = function (config) {
             suppressFailed: false, // do not print information about failed tests
             suppressPassed: false, // do not print information about passed tests
             suppressSkipped: true, // do not print information about skipped tests
-            showSpecTiming: false, // print the time elapsed for each spec
+            showSpecTiming: false // print the time elapsed for each spec
         },
         port: 9876,
         colors: true,
-        logLevel: config.LOG_WARN,
+        logLevel: config.LOG_INFO,
         autoWatch: false,
-        browsers: ['ChromeHeadless'],
+        browsers: ['ChromeHeadlessNoSandbox'],
+        customLaunchers: {
+            ChromeHeadlessNoSandbox: {
+                base: 'ChromeHeadless',
+                flags: ['--no-sandbox']
+            }
+        },
         singleRun: true,
-        concurrency: Infinity,
+        concurrency: Infinity
     });
 };
