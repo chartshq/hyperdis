@@ -88,14 +88,16 @@ const
         onFinishCallback = onFinishCallback &&
             typeof onFinishCallback === 'function' && onFinishCallback || (() => { });
 
-        return (listeners) => {
+        return (listeners, payload) => {
             [].push.apply(queue, listeners);
             if (animationFrame === null) {
                 animationFrame = reqAnimFrame(() => {
-                    unique(queue).forEach(fn => fn());
-                    onFinishCallback();
-                    animationFrame = null;
+                    const tempQ = queue.slice(0);
                     queue.length = 0;
+                    animationFrame = null;
+
+                    unique(tempQ).forEach(fn => fn());
+                    onFinishCallback(payload);
                 });
             }
         };
@@ -167,16 +169,6 @@ function resolveDependencyOrder (node, resolved, resolveMap) {
     resolveMap[qname] = 1;
 }
 
-// function getUpstreamNodes (node, list) {
-//     if (node.isRoot()) {
-//         return;
-//     }
-//     node.outgoingEdges.forEach((_node) => {
-//         list.push(_node);
-//         getUpstreamNodes(_node, list);
-//     });
-// }
-
 class CustomResolver {
     constructor (resolver) {
         this.fn = resolver;
@@ -211,7 +203,6 @@ export {
     ForeignSet,
     resolveDependencyOrder,
     fetch,
-    // upstreamNodes,
     fetchAggregator,
     CustomResolver,
     getUpstreamNodes
