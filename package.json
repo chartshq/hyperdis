@@ -53,7 +53,7 @@
   "scripts": {
     "test": "npm run lint && npm run ut",
     "ut": "karma start karma.conf.js",
-    "utd": "karma start karma.conf.js --browsers=Chrome --single-run=false --debug",
+    "utd": "karma start karma.conf.js --browsers=Chrome --single-run=false --debug --auto-watch",
     "build": "webpack --mode production",
     "start": "webpack-dev-server --open --mode development",
     "lint": "eslint ./src",
