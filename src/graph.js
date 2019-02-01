@@ -27,9 +27,9 @@ export default class Graph {
             nextFrameListeners: false
         };
 
-        this._schedule = scheduler(() => {
+        this._schedule = scheduler((payload) => {
             let qname;
-            for (qname in this.qualifiedNodeMap) {
+            for (qname in payload.flushTarget) {
                 if (!({}).hasOwnProperty.call(this.qualifiedNodeMap, qname)) {
                     return;
                 }
@@ -155,7 +155,7 @@ export default class Graph {
         });
 
         !this.propagationOverride.currentFrameListeners && cfLstnrs.forEach(fn => fn());
-        !this.propagationOverride.nextFrameListeners && this._schedule(nfLstnrs);
+        !this.propagationOverride.nextFrameListeners && this._schedule(nfLstnrs, { flushTarget: changedSet });
         this.resetPropagationOverride();
         return this;
     }
