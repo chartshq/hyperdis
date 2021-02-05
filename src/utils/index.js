@@ -70,7 +70,7 @@ const
     compose = fns => () => {
         fns.forEach(fn => fn());
     },
-    flat = (...params) => {
+    flat = (params) => {
         const res = [];
         params.forEach(param => res.push(...param));
         return res;
