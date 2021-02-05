@@ -107,7 +107,7 @@ export default class Graph {
         return eNode[`regListenerFor${fnSpec.type}`](fnSpec.fn);
     }
 
-    update (...params) {
+    update (params) {
         let changedSet,
             upstreamNodes;
         const
@@ -117,7 +117,9 @@ export default class Graph {
                 return entry[0];
             });
         nodes.forEach(node => node.resolve());
-        electricEdges.push(...flat(...nodes.map(node => node.electricEdges)));
+        for (let val of flat(nodes.map(node => node.electricEdges))) {
+            electricEdges.push(val);
+        }
         changedSet = new ForeignSet(nodes.map(node => node.qualifiedName));
 
         if (!this._propagate) {
@@ -129,7 +131,9 @@ export default class Graph {
         upstreamNodes = getUpstreamNodes(nodes);
         upstreamNodes.forEach(upstreamNode => upstreamNode.resolve());
         changedSet.append(upstreamNodes.map(node => node.qualifiedName));
-        electricEdges.push(...flat(...upstreamNodes.map(node => node.electricEdges)));
+        for (let val of flat(upstreamNodes.map(node => node.electricEdges))) {
+            electricEdges.push(val);
+        }
 
         this.__execUniqueElectricEdges(Array.from(new Set(electricEdges)), changedSet);
         return this;
@@ -163,7 +167,7 @@ export default class Graph {
     resetNodeValue (...qnames) {
         const nodes = qnames.map(qname => this.qualifiedNodeMap[qname]),
             args = nodes.map(node => [node, node.seed]);
-        this.update(...args);
+        this.update(args);
         return this;
     }
 

@@ -250,7 +250,7 @@ class Model {
      */
     unlock () {
         this._lockFlag = false;
-        this.setProp(...this._reqQ);
+        this.setProp(this._reqQ);
         this._reqQ.length = 0;
         return this;
     }
@@ -289,7 +289,7 @@ class Model {
         }
 
         if (len === 2) {
-            this._lockFlag ? this._reqQ.push([prop, val]) : this.setProp([prop, val]);
+            this._lockFlag ? this._reqQ.push([prop, val]) : this.setProp([[prop, val]]);
             return this;
         }
 
@@ -297,7 +297,7 @@ class Model {
     }
 
     // eslint-disable-next-line require-jsdoc
-    setProp (...props) {
+    setProp (props) {
         // Filter out the calculated variables, so that it cant be changed from outside
         // @todo if a node is not leafValue, and change is called, ignore it too
         // props = props.filter(prop => !(VirtualObj.walkTill(prop[0].split('.'), this._vObj).leafValue()
@@ -307,7 +307,7 @@ class Model {
             return this;
         }
 
-        this._graph.update(...props.map(prop => [this._graph.getNodeFromQualifiedName(prop[0]), prop[1]]));
+        this._graph.update(props.map(prop => [this._graph.getNodeFromQualifiedName(prop[0]), prop[1]]));
         return this;
     }
 
